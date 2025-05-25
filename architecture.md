@@ -1,90 +1,176 @@
-Architecture: GUI File Organizer in Python
+file_sorter_gui/
+├── main.py                          # App entry point
+├── requirements.txt                # Dependencies
+├── README.md                       # Project documentation
+├── sorter/
+│   ├── __init__.py
+│   ├── controller.py               # Links GUI and sorting logic
+│   ├── sorter_engine.py           # Core logic: scan, classify, sort
+│   ├── file_rules.py              # File extension → folder mapping
+│   └── utils.py                   # Helpers: move file, logging, etc.
+├── gui/
+│   ├── __init__.py
+│   ├── app.py                     # Bootstraps GUI app
+│   ├── layout.py                  # GUI layout (folder picker, sort button)
+│   └── events.py                  # Handles UI interaction logic
+├── assets/
+│   ├── icon.png                   # App icon
+│   └── styles.qss                 # (Optional) UI styling
+├── tests/
+│   ├── test_sorter_engine.py
+│   ├── test_file_rules.py
+│   └── test_utils.py
+└── logs/
+    └── sorter.log                 # Runtime logs (moved files, errors)
 
-Overview
+📄 File & Folder Roles
+main.py
+Purpose: App entry point.
 
-This application is a GUI-based file organizer written in Python using Tkinter. The user selects a folder, optionally edits file extension-to-folder mappings, and clicks a button to organize files accordingly. The UI is clean and intuitive, designed for non-technical users.
+Responsibilities:
 
-Modules
+Initializes GUI
 
-1. gui.py
+Sets up logging
 
-Contains the Tkinter-based GUI.
+Loads config/defaults
 
-Handles user interaction.
+requirements.txt
+Lists all Python dependencies (e.g., PyQt5, watchdog, pytest, etc.)
 
-Collects user input (target folder, mappings, options).
+README.md
+Documentation for setup, usage, and architecture overview.
 
-2. organizer.py
+📦 sorter/ — Core Sorting Logic
+controller.py
+Role: Orchestrates GUI ↔ logic interaction.
 
-Core logic to sort files based on the user-defined mappings.
+Handles:
 
-Includes conflict resolution, folder creation, summary generation.
+Input from GUI (e.g., folder selection)
 
-3. config.py
+Triggering sort operations
 
-Default mappings.
+Managing app state
 
-Load/save configuration logic.
+sorter_engine.py
+Role: Core sorting engine.
 
-4. undo.py
+Handles:
 
-Logs move actions to allow undoing.
+Reading file metadata
 
-Applies reverse of log to move files back.
+Moving files to target folders
 
-Core Functional Components
+Undo functionality (move history, rollback)
 
-GUI Elements
+Safe overwrite handling
 
-Folder picker (uses tkinter.filedialog.askdirectory())
+file_rules.py
+Role: Rule definitions for file sorting.
 
-Editable mapping area (text field or table with file extension → folder)
+Examples:
 
-Buttons: Run, Dry Run checkbox, Recursive toggle
+Group .jpg, .png, .gif into Images/
 
-Status Log output (scrollable text box)
+Group .pdf, .docx into Documents/
 
-File Sorting Logic
+Custom user-defined rules
 
-Loads mapping from GUI or config
+utils.py
+Role: Helper functions.
 
-Walks the target folder (optionally recursively)
+Includes:
 
-Applies move logic
+File extension extractor
 
-Skips system/hidden files
+Size/date filters
 
-Avoids overwriting (adds suffix if needed)
+Logging helpers
 
-Creates folders if missing
+🖼️ gui/ — GUI Components
+app.py
+Role: GUI App starter (e.g., using PyQt5 or Tkinter)
 
-Logs all actions
+Initializes:
 
-Undo Mechanism
+Main window
 
-Each run writes to undo_log.txt with original → new path pairs
+Layout
 
-Undo reads log and reverses each move
+Event loop
 
-Configuration Persistence
+layout.py
+Role: Contains visual layout of the app.
 
-Saves current mapping to .json or .yaml
+Elements:
 
-Loads mapping from saved config on launch or by user request
+Folder chooser
 
-Dependencies
+Sorting settings panel
 
-Python 3.x
+File preview
 
-Tkinter (standard library)
+Logs/output area
 
-os, shutil, json, yaml, re, tkinter.filedialog
+events.py
+Role: Event management.
 
-Optional Enhancements (Modular)
+Handles:
 
-Add command-line interface fallback
+Button clicks
 
-Add dark mode toggle
+Rule selection changes
 
-Add logging to file for audits
+Error modals
 
+File sorting triggers
+
+🎨 assets/ — UI Assets
+icon.png: App icon
+
+styles.qss: Theme/stylesheet for PyQt UI (or CSS-equivalent)
+
+🧪 tests/ — Unit & Integration Tests
+test_sorter_engine.py: Tests for file moving and rollback logic
+
+test_file_rules.py: Tests rule logic + extension handling
+
+test_utils.py: Tests date/size/format helpers
+
+🗃️ logs/ — Output & Debugging
+sorter.log: Runtime logs (errors, file moves, etc.)
+
+✅ Optional Features (Scalable Additions)
+✅ Undo/Redo stack using JSON move history
+
+✅ Drag-and-drop folder selection
+
+✅ Save/Load user-defined rule sets
+
+✅ Background folder monitoring (with watchdog)
+
+✅ Profile performance (file count, speed)
+
+💡 Technologies to Use
+Language: Python 3.11+
+
+GUI Library: PyQt5 or Tkinter
+
+File Ops: os, shutil, pathlib
+
+Watcher (optional): watchdog
+
+Testing: pytest
+
+🛠️ Sample Rule Format (YAML or JSON)
+json
+Copy
+Edit
+{
+  "Images": [".jpg", ".jpeg", ".png", ".gif", ".svg"],
+  "Documents": [".pdf", ".docx", ".txt", ".odt"],
+  "Audio": [".mp3", ".wav", ".flac"],
+  "Video": [".mp4", ".mov", ".avi"],
+  "Adobe Files": [".psd", ".ai", ".indd"]
+}

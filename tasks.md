@@ -1,113 +1,117 @@
-Task List: GUI File Organizer in Python
+🧩 Granular Tasks
+🚀 Phase 1: Setup
+✅ Task 1: Scaffold project structure
 
-Phase 1: Setup and Skeleton
+Create file_sorter_gui/ and subdirectories.
 
-Initialize project structure
+Include: README.md, .gitignore, and requirements.txt.
 
-Create folders: /src, /tests, /assets
+✅ Task 2: Set up virtual environment
 
-Create files: gui.py, organizer.py, config.py, undo.py, main.py
+Initialize Python venv.
 
-Setup basic GUI window
+Install PyQt5 and pytest.
 
-Use Tkinter to create a root window
+Test: pip install -r requirements.txt
 
-Set a clean and minimal layout
+⚙️ Phase 2: Sorting Logic (Headless)
+✅ Task 3: Build file_rules.py
 
-Add folder picker
+Create a DEFAULT_RULES dictionary:
 
-Add button to open folder selection dialog
+python
+Copy
+Edit
+DEFAULT_RULES = {
+    "Images": [".jpg", ".jpeg", ".png", ".gif", ".bmp"],
+    "Documents": [".pdf", ".docx", ".doc", ".txt", ".odt"],
+    "Audio": [".mp3", ".wav", ".flac", ".aac"],
+    "Video": [".mp4", ".mov", ".avi", ".mkv"],
+    "Archives": [".zip", ".rar", ".7z"],
+    "Adobe Files": [".psd", ".ai", ".indd"],
+    "Executables": [".exe", ".msi", ".bat"],
+    "Code": [".py", ".js", ".html", ".css", ".cpp", ".java"]
+}
+✅ Task 4: Implement sort_files_by_extension(src_dir) in sorter_engine.py
 
-Display selected folder path
+Walk the directory.
 
-Phase 2: Core GUI
+For each loose file, determine its extension.
 
-Add file extension mapping input area
+Move file to a subfolder based on the rules.
 
-Use multiline Text widget or editable Table
+Create the subfolder if it doesn’t exist.
 
-Preload with default mappings
+Do not enter subfolders—only sort files directly inside src_dir.
 
-Add control buttons
+✅ Task 5: Add move_file_safely(src_path, dest_path) to utils.py
 
-"Run" button to trigger sorting
+Handles:
 
-"Dry Run" checkbox
+Creating folders if needed.
 
-"Recursive Mode" toggle
+Avoiding overwrites (e.g., file (1).jpg)
 
-Add status log panel
+Test with multiple files having same name.
 
-Scrollable Text box to display move actions and summaries
+✅ Task 6: Link file rules to sorter engine
 
-Phase 3: Sorting Logic (organizer.py)
+Import DEFAULT_RULES in sorter_engine.py.
 
-Implement file scanning logic
+Use it in sorting logic to determine destination.
 
-List all files in the selected directory
+✅ Task 7: Add logging to sorter_engine.py
 
-If recursive, walk through all subfolders
+Create logs/sorter.log.
 
-Implement extension mapping and sorting logic
+Log every move: "Moved example.jpg → Images/"
 
-Match file extension to folder
+✅ Task 8: Add unit test: test_sorter_engine.py
 
-Create folder if not exists
+Mock a temp folder.
 
-Move file to folder
+Place mixed loose files in it.
 
-Handle name conflicts
+Assert files are correctly moved into matching folders.
 
-If file exists, add (1), (2), etc., until a free name is found
+🧠 Phase 3: GUI Interface
+✅ Task 9: Build static UI layout in layout.py
 
-Update status log
+Add:
 
-Append result of each move to the log
+Folder picker (directory browser)
 
-Display final summary (e.g., "Moved 10 Images")
+“Sort Files” button
 
-Phase 4: Undo System (undo.py)
+Output log area
 
-Log all file moves
+✅ Task 10: Hook up folder picker to variable
 
-Write original and new path to undo_log.txt
+Store selected folder path in app state.
 
-Implement undo function
+✅ Task 11: Trigger sort_files_by_extension() from UI
 
-Read undo_log.txt
+When button clicked:
 
-Reverse each move (if file exists)
+Call sort_files_by_extension() with selected path
 
-Phase 5: Config System (config.py)
+Update log box with results
 
-Add save config feature
+✅ Task 12: Add error handling in events.py
 
-Write mapping to .json or .yaml file
+Show message if:
 
-Add load config feature
+Folder is invalid
 
-Allow loading from a previously saved config file
+No files found
 
-Preload default mappings
+Exceptions raised during move
 
-On first run, populate input area with default mapping dictionary
+🎨 Phase 4: Polish (Optional for MVP)
+✅ Task 13: Apply minimal style via styles.qss
 
-Phase 6: Finalization
+Clean spacing, readable fonts, padding
 
-Polish GUI layout
+✅ Task 14: Package executable using pyinstaller
 
-Align elements, ensure resize behavior is clean
-
-Test all features
-
-Manual test each feature
-
-Validate undo, recursive, dry run
-
-Add optional enhancements (if time)
-
-Logging to file
-
-Dark mode
-
-Command-line mode fallback
+Generate .exe or .app for easy use
