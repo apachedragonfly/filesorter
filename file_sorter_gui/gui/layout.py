@@ -1,79 +1,124 @@
 import sys
+import logging # For custom handler and logger access
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, 
     QPushButton, QLineEdit, QTextEdit, QLabel, QSizePolicy,
-    QFileDialog # Added for folder dialog
+    QFileDialog, QMessageBox # Added QMessageBox
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal, QObject # Added pyqtSignal, QObject
+
+# Adjust path to import from sorter module
+import os
+from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+from sorter.sorter_engine import sort_files_by_extension, logger as sorter_logger # Import the specific logger
+
+# Custom Log Handler for QTextEdit
+class QTextEditLogHandler(logging.Handler, QObject):
+    messageWritten = pyqtSignal(str)
+
+    def __init__(self, parent):
+        super().__init__()
+        QObject.__init__(self)
+        self.formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+        self.setFormatter(self.formatter)
+
+    def emit(self, record):
+        msg = self.format(record)
+        self.messageWritten.emit(msg)
 
 class MainAppLayout(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("File Sorter GUI")
-        # Set a default size that's reasonable
-        self.setMinimumSize(600, 400) 
-        self.selected_folder_path = None # Variable to store the selected path
+        self.setMinimumSize(600, 450) # Slightly increased height for log messages
+        self.selected_folder_path = None
         self._init_ui()
+        self._setup_gui_logging() # Initialize GUI logging
+
+    def _setup_gui_logging(self):
+        """Sets up logging to the GUI's QTextEdit."""
+        self.log_handler = QTextEditLogHandler(self)
+        # Add handler to the specific sorter_logger from sorter_engine
+        # This avoids capturing all root logger messages if not desired.
+        sorter_logger.addHandler(self.log_handler)
+        # Optionally, set the level for this handler if you want GUI to show different verbosity
+        # self.log_handler.setLevel(logging.INFO) 
+        self.log_handler.messageWritten.connect(self._update_log_area)
+
+    def _update_log_area(self, message):
+        """Appends a message to the log_output_area QTextEdit."""
+        self.log_output_area.append(message)
 
     def _init_ui(self):
-        # Main vertical layout
         main_layout = QVBoxLayout(self)
 
-        # --- Folder Selection --- #
         folder_section_layout = QHBoxLayout()
-        
         self.folder_path_label = QLabel("Selected Folder:")
         self.folder_path_display = QLineEdit()
         self.folder_path_display.setPlaceholderText("No folder selected...")
-        self.folder_path_display.setReadOnly(True) # Display only, path set via picker
-        
+        self.folder_path_display.setReadOnly(True)
         self.browse_folder_button = QPushButton("Browse...")
-        self.browse_folder_button.clicked.connect(self._browse_folder) # Connect button click
-
+        self.browse_folder_button.clicked.connect(self._browse_folder)
         folder_section_layout.addWidget(self.folder_path_label)
-        folder_section_layout.addWidget(self.folder_path_display, 1) # Line edit takes available horizontal space
+        folder_section_layout.addWidget(self.folder_path_display, 1)
         folder_section_layout.addWidget(self.browse_folder_button)
         main_layout.addLayout(folder_section_layout)
 
-        # --- Sort Button --- #
         self.sort_files_button = QPushButton("Sort Files in Selected Folder")
-        self.sort_files_button.setStyleSheet("padding: 10px; font-size: 16px;") # Basic styling
+        self.sort_files_button.setStyleSheet("padding: 10px; font-size: 16px;")
+        self.sort_files_button.clicked.connect(self._trigger_sort) # Connect sort button
         main_layout.addWidget(self.sort_files_button, alignment=Qt.AlignCenter)
 
-        # --- Output Log Area --- #
         log_area_label = QLabel("Log Output:")
         self.log_output_area = QTextEdit()
         self.log_output_area.setReadOnly(True)
         self.log_output_area.setPlaceholderText("Events will be logged here...")
-        # Allow log area to expand vertically
         self.log_output_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
         main_layout.addWidget(log_area_label)
         main_layout.addWidget(self.log_output_area)
 
         self.setLayout(main_layout)
 
     def _browse_folder(self):
-        """Opens a dialog to select a folder and updates the display and internal variable."""
-        # The first argument is parent, second is caption, third is default dir.
-        # os.getcwd() could be used for default dir if desired.
-        folder_path = QFileDialog.getExistingDirectory(self, "Select Folder to Sort", "")
-        
-        if folder_path: # If a folder was selected (not cancelled)
+        folder_path = QFileDialog.getExistingDirectory(self, "Select Folder to Sort", self.selected_folder_path or os.getcwd())
+        if folder_path:
             self.selected_folder_path = folder_path
             self.folder_path_display.setText(self.selected_folder_path)
-            print(f"Selected folder: {self.selected_folder_path}") # For console feedback during testing
+            # Log to GUI instead of print
+            self.log_output_area.append(f"INFO: Selected folder: {self.selected_folder_path}") 
         else:
-            # Optionally, handle case where dialog is cancelled (e.g., clear path or do nothing)
-            # self.selected_folder_path = None
-            # self.folder_path_display.setPlaceholderText("Folder selection cancelled...")
-            print("Folder selection cancelled or no folder chosen.")
+            self.log_output_area.append("INFO: Folder selection cancelled or no folder chosen.")
+
+    def _trigger_sort(self):
+        """Handles the click of the 'Sort Files' button."""
+        self.log_output_area.clear() # Clear log area for new sort operation
+        
+        if self.selected_folder_path and os.path.isdir(self.selected_folder_path):
+            self.log_output_area.append(f"Starting sort for: {self.selected_folder_path}")
+            try:
+                # This will now log to both file (if sorter_engine still has its file handler)
+                # and to our GUI log area via the QTextEditLogHandler.
+                sort_files_by_extension(self.selected_folder_path)
+                self.log_output_area.append("SUCCESS: Sorting process completed.")
+                QMessageBox.information(self, "Sort Complete", f"Successfully sorted files in \n{self.selected_folder_path}")
+            except Exception as e:
+                error_msg = f"ERROR: An unexpected error occurred during sorting: {e}"
+                self.log_output_area.append(error_msg)
+                QMessageBox.critical(self, "Sort Error", f"An error occurred: \n{e}")
+        else:
+            msg = "No folder selected or folder is invalid. Please select a valid folder first."
+            self.log_output_area.append(f"WARNING: {msg}")
+            QMessageBox.warning(self, "No Folder Selected", msg)
 
 # To allow testing this layout independently
 if __name__ == '__main__':
+    # Setup a basic console logger for __main__ execution for debugging this file itself.
+    # The sorter_engine's logger will still use its own handlers (file + GUI if MainAppLayout is up).
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
     app = QApplication(sys.argv)
-    # In a real app, we'd instantiate from gui.app or main.py
-    # For now, just show the layout
     layout_widget = MainAppLayout()
     layout_widget.show()
     sys.exit(app.exec_()) 
