@@ -67,7 +67,8 @@ class MainAppLayout(QWidget):
         main_layout.addLayout(folder_section_layout)
 
         self.sort_files_button = QPushButton("Sort Files in Selected Folder")
-        self.sort_files_button.setStyleSheet("padding: 10px; font-size: 16px;")
+        self.sort_files_button.setObjectName("SortButton") # Set object name for specific styling
+        # self.sort_files_button.setStyleSheet("padding: 10px; font-size: 16px;") # QSS will handle this now
         self.sort_files_button.clicked.connect(self._trigger_sort) # Connect sort button
         main_layout.addWidget(self.sort_files_button, alignment=Qt.AlignCenter)
 
@@ -128,6 +129,18 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
     app = QApplication(sys.argv)
+
+    # Load and apply stylesheet
+    # Assumes styles.qss is in ../assets/ relative to this file (gui/layout.py)
+    style_sheet_path = PROJECT_ROOT / "assets" / "styles.qss"
+    try:
+        with open(style_sheet_path, "r") as f_style:
+            app.setStyleSheet(f_style.read())
+    except FileNotFoundError:
+        logging.warning(f"Stylesheet not found at {style_sheet_path}. Using default styles.")
+    except Exception as e:
+        logging.error(f"Error loading stylesheet {style_sheet_path}: {e}")
+
     layout_widget = MainAppLayout()
     layout_widget.show()
     sys.exit(app.exec_()) 
