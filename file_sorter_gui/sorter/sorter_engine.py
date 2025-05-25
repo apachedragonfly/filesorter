@@ -52,7 +52,7 @@ def sort_files_by_extension(src_dir):
     """
     if not os.path.isdir(src_dir):
         logger.error(f"Source directory '{src_dir}' not found or is not a directory.")
-        return
+        return 0, 0 # Return counts on error
 
     logger.info(f"Starting to sort files in: {src_dir}")
     files_moved_count = 0
@@ -97,6 +97,7 @@ def sort_files_by_extension(src_dir):
 
     logger.info(f"Finished sorting files in: {src_dir}")
     logger.info(f"Summary: {files_moved_count} file(s) moved, {files_skipped_count} item(s) skipped.")
+    return files_moved_count, files_skipped_count # Return the counts
 
 if __name__ == '__main__':
     import shutil
@@ -142,7 +143,8 @@ if __name__ == '__main__':
         print(f"- {item}")
     print("-----------------------------------------------------")
 
-    sort_files_by_extension(base_test_dir)
+    moved, skipped = sort_files_by_extension(base_test_dir) # Capture returned counts
+    print(f"__main__ result: Moved: {moved}, Skipped: {skipped}") # Print returned counts
 
     print("-----------------------------------------------------")
     print(f"--- Test finished. Check logs/sorter.log and contents of '{base_test_dir}' ---")

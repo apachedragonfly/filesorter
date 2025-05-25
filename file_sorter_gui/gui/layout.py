@@ -100,9 +100,18 @@ class MainAppLayout(QWidget):
             try:
                 # This will now log to both file (if sorter_engine still has its file handler)
                 # and to our GUI log area via the QTextEditLogHandler.
-                sort_files_by_extension(self.selected_folder_path)
-                self.log_output_area.append("SUCCESS: Sorting process completed.")
-                QMessageBox.information(self, "Sort Complete", f"Successfully sorted files in \n{self.selected_folder_path}")
+                moved_count, skipped_count = sort_files_by_extension(self.selected_folder_path)
+                
+                # The summary is already logged by sorter_engine, so we mainly focus on overall status here.
+                if moved_count == 0 and skipped_count > 0:
+                    self.log_output_area.append(f"INFO: Sorting process completed. No files were moved, but {skipped_count} items were processed/skipped.")
+                    QMessageBox.information(self, "Sort Complete", f"Sorting process finished for \n{self.selected_folder_path}.\nNo files were moved. Check logs for details.")
+                elif moved_count == 0 and skipped_count == 0:
+                    self.log_output_area.append(f"INFO: Sorting process completed. No files found to move or skip in {self.selected_folder_path}.")
+                    QMessageBox.information(self, "Sort Complete", f"No files found to sort in \n{self.selected_folder_path}.")
+                else: # moved_count > 0
+                    self.log_output_area.append(f"SUCCESS: Sorting process completed. {moved_count} file(s) moved.")
+                    QMessageBox.information(self, "Sort Complete", f"Successfully sorted {moved_count} file(s) in \n{self.selected_folder_path}")
             except Exception as e:
                 error_msg = f"ERROR: An unexpected error occurred during sorting: {e}"
                 self.log_output_area.append(error_msg)
