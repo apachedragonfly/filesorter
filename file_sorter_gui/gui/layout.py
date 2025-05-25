@@ -1,7 +1,8 @@
 import sys
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, 
-    QPushButton, QLineEdit, QTextEdit, QLabel, QSizePolicy
+    QPushButton, QLineEdit, QTextEdit, QLabel, QSizePolicy,
+    QFileDialog # Added for folder dialog
 )
 from PyQt5.QtCore import Qt
 
@@ -11,6 +12,7 @@ class MainAppLayout(QWidget):
         self.setWindowTitle("File Sorter GUI")
         # Set a default size that's reasonable
         self.setMinimumSize(600, 400) 
+        self.selected_folder_path = None # Variable to store the selected path
         self._init_ui()
 
     def _init_ui(self):
@@ -26,6 +28,7 @@ class MainAppLayout(QWidget):
         self.folder_path_display.setReadOnly(True) # Display only, path set via picker
         
         self.browse_folder_button = QPushButton("Browse...")
+        self.browse_folder_button.clicked.connect(self._browse_folder) # Connect button click
 
         folder_section_layout.addWidget(self.folder_path_label)
         folder_section_layout.addWidget(self.folder_path_display, 1) # Line edit takes available horizontal space
@@ -49,6 +52,22 @@ class MainAppLayout(QWidget):
         main_layout.addWidget(self.log_output_area)
 
         self.setLayout(main_layout)
+
+    def _browse_folder(self):
+        """Opens a dialog to select a folder and updates the display and internal variable."""
+        # The first argument is parent, second is caption, third is default dir.
+        # os.getcwd() could be used for default dir if desired.
+        folder_path = QFileDialog.getExistingDirectory(self, "Select Folder to Sort", "")
+        
+        if folder_path: # If a folder was selected (not cancelled)
+            self.selected_folder_path = folder_path
+            self.folder_path_display.setText(self.selected_folder_path)
+            print(f"Selected folder: {self.selected_folder_path}") # For console feedback during testing
+        else:
+            # Optionally, handle case where dialog is cancelled (e.g., clear path or do nothing)
+            # self.selected_folder_path = None
+            # self.folder_path_display.setPlaceholderText("Folder selection cancelled...")
+            print("Folder selection cancelled or no folder chosen.")
 
 # To allow testing this layout independently
 if __name__ == '__main__':
